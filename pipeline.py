@@ -94,12 +94,39 @@ def unir() -> int:
     assert n == ids, "tabla_final tiene ids repetidos"
     print(f"Etapa de unir: tabla_final={n} filas, {ids} ids unicos")
     return n
+
+# Funcion para responder las preguntas de negocio
+def preguntas() -> None:
+    """Ejecuta las 5 preguntas de negocio e imprime los resultados."""
+    con = conectar()
+    try:
+        con.execute(sql("preguntas.sql"))
+        for i in range(1, 6):
+            print(f"\n--- Pregunta {i} ---")
+            print(con.execute(f"SELECT * FROM respuesta_{i}").df().to_string(index=False))
+    except Exception as e:
+        print("Error al procesar los datos", e)
+    finally:
+        con.close()
     
+# Funcion resumen de rechazados
+def resumen_rechazos() -> None:
+    con = conectar()
+    try:
+        print("\n--- Rechazos por regla ---")
+        print(con.execute("SELECT * FROM resumen_rechazos ORDER BY cantidad DESC").df().to_string(index=False))
+    except Exception as e:
+        print("Error al procesar los datos", e)
+    finally:
+        con.close()
+
 def main() -> None:
     extraer_y_cargar()
     validar()
     limpiar()
     unir()
+    preguntas()
+    resumen_rechazos()
 
 if __name__ == "__main__":
     main()
