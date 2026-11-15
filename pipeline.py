@@ -19,7 +19,7 @@ def conectar():
     return duckdb.connect(str(DUCKDB))
 
 
-# Punto 1 y 2 
+# Funcion extraer y cargar
 def extraer() -> pd.DataFrame:
     """Lee los datos del SQLite original (modo solo lectura)."""
     uri = f"file:{ORIGEN}?mode=ro"
@@ -35,6 +35,8 @@ def extraer_y_cargar():
         con.register("df_origen", df)
         con.execute("CREATE OR REPLACE TABLE tema_05_rrhh_raw AS SELECT * FROM df_origen") # ACA A LA TABLA LA LLAME COMO EL TEMA QUE NOS TOCO, ASI DICE EL DOCX, MIENTRAS QUE EN EL MARKDOWN DEL REPO DICE QUE LE PONGA COMO raw_empleados
         filas = con.execute("SELECT count(*) FROM tema_05_rrhh_raw").fetchone()[0]
+    except Exception as e:
+        print("Error al procesar los datos", e)
     finally:
         con.close()
         print(f"Etapa de extraer y cargar, cantidad de registros: {filas} filas")
@@ -50,6 +52,8 @@ def validar() -> tuple[int, int]:
         v = con.execute("SELECT count(*) FROM validos").fetchone()[0]
         r = con.execute("SELECT count(*) FROM rechazados").fetchone()[0]
         total = con.execute("SELECT count(*) FROM tema_05_rrhh_raw").fetchone()[0]
+    except Exception as e:
+        print("Error al procesar los datos", e)
     finally:
         con.close()
     assert v + r == total, "validos + rechazados debe ser igual a raw"
@@ -68,16 +72,34 @@ def limpiar() -> int:
             SELECT count(*) FROM rechazados_limpios
             WHERE fecha_ingreso IS NULL OR departamento IS NULL OR email IS NULL OR salario <= 0
         """).fetchone()[0]
+    except Exception as e:
+        print("Error al procesar los datos", e)
     finally:
         con.close()
     print(f"Etapa de limpieza: rechazados_limpios={n} - sin resolver: {pendientes}")
     return n
 
+# Funcion unir
+def unir() -> int:
+    """validos + rechazados_limpios -> tabla_final (sin duplicados, tipos correctos)."""
+    con = conectar()
+    try:
+        con.execute(sql("unir.sql"))
+        n = con.execute("SELECT count(*) FROM tabla_final").fetchone()[0]
+        ids = con.execute("SELECT count(DISTINCT id_empleado) FROM tabla_final").fetchone()[0]
+    except Exception as e:
+        print("Error al procesar los datos", e)
+    finally:
+        con.close()
+    assert n == ids, "tabla_final tiene ids repetidos"
+    print(f"Etapa de unir: tabla_final={n} filas, {ids} ids unicos")
+    return n
     
 def main() -> None:
     extraer_y_cargar()
     validar()
     limpiar()
+    unir()
 
 if __name__ == "__main__":
     main()

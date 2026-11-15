@@ -9,9 +9,13 @@ UNION ALL
 -- R2: ID Duplicado
 SELECT rowid, 'id_duplicado'
 FROM tema_05_rrhh_raw
-WHERE id_empleado IN 
-( SELECT id_empleado FROM tema_05_rrhh_raw WHERE id_empleado IS NOT NULL
-   GROUP BY id_empleado HAVING COUNT(*) > 1 )
+WHERE id_empleado IS NOT NULL
+  AND rowid NOT IN (
+      SELECT MIN(rowid)
+      FROM tema_05_rrhh_raw
+      WHERE id_empleado IS NOT NULL
+      GROUP BY id_empleado
+  )
 
 UNION ALL
 -- R3: Nombre nulo o vacío
