@@ -37,7 +37,7 @@ def extraer_y_cargar():
         filas = con.execute("SELECT count(*) FROM tema_05_rrhh_raw").fetchone()[0]
     finally:
         con.close()
-        print(f"tema_05_rrhh_raw: {filas} filas")
+        print(f"Etapa de extraer y cargar, cantidad de registros: {filas} filas")
     return filas
 
 
@@ -53,13 +53,31 @@ def validar() -> tuple[int, int]:
     finally:
         con.close()
     assert v + r == total, "validos + rechazados debe ser igual a raw"
-    print(f"validos={v} rechazados={r}, total = {v + r}")
+    print(f"Etapa de validación: validos={v} rechazados={r}, total = {v + r}")
     return v, r
+
+
+# Funcion Limpiar
+def limpiar() -> int:
+    """Corrige lo corregible de los rechazados -> rechazados_limpios."""
+    con = conectar()
+    try:
+        con.execute(sql("limpiar.sql"))
+        n = con.execute("SELECT count(*) FROM rechazados_limpios").fetchone()[0]
+        pendientes = con.execute("""
+            SELECT count(*) FROM rechazados_limpios
+            WHERE fecha_ingreso IS NULL OR departamento IS NULL OR email IS NULL OR salario <= 0
+        """).fetchone()[0]
+    finally:
+        con.close()
+    print(f"Etapa de limpieza: rechazados_limpios={n} - sin resolver: {pendientes}")
+    return n
 
     
 def main() -> None:
     extraer_y_cargar()
     validar()
+    limpiar()
 
 if __name__ == "__main__":
     main()
