@@ -37,12 +37,29 @@ def extraer_y_cargar():
         filas = con.execute("SELECT count(*) FROM tema_05_rrhh_raw").fetchone()[0]
     finally:
         con.close()
-    print(f"tema_05_rrhh_raw: {filas} filas")
+        print(f"tema_05_rrhh_raw: {filas} filas")
     return filas
+
+
+# Funcion para validar
+def validar() -> tuple[int, int]:
+    """Aplica las reglas y separa en validos rechazados."""
+    con = conectar()
+    try:
+        con.execute(sql("validar.sql"))
+        v = con.execute("SELECT count(*) FROM validos").fetchone()[0]
+        r = con.execute("SELECT count(*) FROM rechazados").fetchone()[0]
+        total = con.execute("SELECT count(*) FROM tema_05_rrhh_raw").fetchone()[0]
+    finally:
+        con.close()
+    assert v + r == total, "validos + rechazados debe ser igual a raw"
+    print(f"validos={v} rechazados={r}, total = {v + r}")
+    return v, r
 
     
 def main() -> None:
     extraer_y_cargar()
+    validar()
 
 if __name__ == "__main__":
     main()
