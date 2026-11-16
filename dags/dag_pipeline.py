@@ -43,8 +43,9 @@ def preguntas():
 @dag(
     dag_id="pipeline_rrhh_tecnosur",
     start_date=pendulum.datetime(2026, 11, 1, tz="America/Argentina/Buenos_Aires"),
-    schedule="0 2 * * *",   # minuto 0, hora 2, todos los días
+    schedule="0 2 * * *",
     catchup=False,
+    max_active_runs=1,
 )
 def main():
     extraer_y_cargar() >> validar() >> limpiar() >> unir() >> preguntas()
