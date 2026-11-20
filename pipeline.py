@@ -11,7 +11,7 @@ SQL_DIR = BASE / "consultas"
 
 
 def sql(nombre: str) -> str:
-    """Lee un archivo .sql de la carpeta consultas/."""
+    """Lee el archivo .sql de la carpeta consultas"""
     return (SQL_DIR / nombre).read_text(encoding="utf-8")
 
 
@@ -21,7 +21,7 @@ def conectar():
 
 # Funcion extraer y cargar
 def extraer() -> pd.DataFrame:
-    """Lee los datos del SQLite original (modo solo lectura)."""
+    """Lee los datos del SQLite original (en modo solo lectura)."""
     uri = f"file:{ORIGEN}?mode=ro"
     with sqlite3.connect(uri, uri=True) as origen:
         return pd.read_sql_query(sql("extract.sql"), origen)
@@ -63,7 +63,7 @@ def validar() -> tuple[int, int]:
 
 # Funcion Limpiar
 def limpiar() -> int:
-    """Corrige lo corregible de los rechazados -> rechazados_limpios."""
+    """Corrige lo corregible de los rechazados a rechazados_limpios"""
     con = conectar()
     try:
         con.execute(sql("limpiar.sql"))
@@ -81,7 +81,7 @@ def limpiar() -> int:
 
 # Funcion unir
 def unir() -> int:
-    """validos + rechazados_limpios -> tabla_final (sin duplicados, tipos correctos)."""
+    """validos + rechazados_limpios = tabla_final (sin duplicados y tipos correctos)"""
     con = conectar()
     try:
         con.execute(sql("unir.sql"))
